@@ -1,0 +1,6 @@
+# Valores verdadeiros dos sinais sintéticos (gerados por tools/generate_test_signals.m)
+nota.wav: f0=110 Hz, B=1.0e-04, beta=0.15, T60(fund)=3.00 s, damping=0.08
+nota_ponte.wav: beta=0.08 (5.2 cm da ponte)
+nota_braco.wav: beta=0.25 (16.2 cm da ponte)
+riff.wav: onsets(s)=[0.100 0.350 0.600 0.850 1.100 1.350 1.600 1.850 2.100 2.350 ]
+riff.wav: notas(Hz)=[82.41 98.00 110.00 123.47 146.83 164.81 146.83 123.47 110.00 98.00 ]
