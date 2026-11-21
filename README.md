@@ -12,6 +12,17 @@ octave-cli --eval "run_all;"
 
 Em ~20 s isso gera 11 figuras, 11 áudios e um relatório em Markdown (`results/REPORT.md`) com todas as métricas.
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/gif/pluck.gif" width="100%"><br><sub><b>Corda vibrando</b>: a posição da palheta apaga harmônicos (EX05)</sub></td>
+    <td align="center"><img src="docs/gif/karplus_strong.gif" width="100%"><br><sub><b>Karplus-Strong</b>: ruído vira nota dentro de um laço (EX06)</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/gif/aliasing.gif" width="100%"><br><sub><b>Aliasing</b>: acima de fs/2 a frequência é refletida (EX07)</sub></td>
+    <td align="center"><img src="docs/gif/convolution.gif" width="100%"><br><sub><b>Convolução</b>: a resposta ao impulso desliza sobre o sinal (EX08)</sub></td>
+  </tr>
+</table>
+
 ---
 
 ## Sumário
@@ -93,6 +104,16 @@ cfg.show_figures = true;      % abre as janelas em vez de só salvar PNG
 res = ex05_pluck_position(cfg);
 ```
 
+### Animações (opcional)
+
+Os GIFs deste README são gerados por um script Python à parte. Ele não é necessário para rodar o laboratório:
+
+```bash
+pip install numpy matplotlib pillow
+python3 tools/make_gifs.py              # todos
+python3 tools/make_gifs.py pluck ks     # alguns: stft, pluck, ks, aliasing, convolution, inharmonicity
+```
+
 ### Saídas
 
 ```
@@ -124,9 +145,12 @@ guitar-signals-lab/
 │   └── plot/                  # espectro e espectrograma
 ├── tools/
 │   ├── generate_test_signals.m  # cria WAVs sintéticos + gabarito
-│   └── write_report.m           # gera results/REPORT.md
+│   ├── write_report.m           # gera results/REPORT.md
+│   └── make_gifs.py             # gera as animações de docs/gif/ (Python)
 ├── audio/                     # seus WAVs (ou os sintéticos) + ground_truth.txt
-└── docs/img/                  # figuras usadas neste README
+└── docs/
+    ├── img/                   # figuras estáticas usadas neste README
+    └── gif/                   # diagramas animados usados neste README
 ```
 
 ### Princípios de organização
@@ -151,6 +175,8 @@ Cada seção traz o objetivo, a teoria mínima, o que observar na figura e pergu
 $$X[k, m] = \sum_{n} x[n + mH]\, w[n]\, e^{-j 2\pi k n / N}$$
 
 A janela de Hann `w[n]` reduz o vazamento espectral. O preço é um lóbulo principal mais largo, que é o compromisso entre resolução em tempo e resolução em frequência.
+
+<p align="center"><img src="docs/gif/stft.gif" width="75%"><br><em>Cada coluna do espectrograma é a FFT do trecho sob a janela laranja.</em></p>
 
 **Métricas:** duração, pico e RMS (dBFS), fator de crista, tempo de ataque 10→90 %, f0 (YIN), nota mais próxima em cents, centroide espectral.
 
@@ -189,6 +215,8 @@ $$f_n = n f_0 \sqrt{1 + B n^2}$$
 **Truque de linearização.** Elevando ao quadrado e dividindo por n²:
 
 $$\left(\frac{f_n}{n}\right)^2 = f_0^2 + (f_0^2 B)\, n^2$$
+
+<p align="center"><img src="docs/gif/inharmonicity.gif" width="75%"><br><em>Aumentando B, os parciais agudos se afastam da série ideal (em vermelho, o deslocamento).</em></p>
 
 Isso é uma **reta** em n². Então f0 e B saem de mínimos quadrados lineares (`X \ y`), sem otimização não linear. O R² do ajuste diz se o modelo é adequado.
 
@@ -229,6 +257,8 @@ $$A_n \propto \frac{|\sin(n \pi \beta)|}{n}$$
 
 O fator $\sin(n\pi\beta)$ é um **filtro pente**: ele anula todo harmônico em que nβ é inteiro. Tocando a 1/4 da corda, somem os harmônicos 4, 8, 12… É por isso que palhetar perto do braço soa "redondo" e perto da ponte soa "anasalado".
 
+<p align="center"><img src="docs/gif/pluck.gif" width="80%"><br><em>A corda solta a partir de um formato triangular. O "bico" que percorre a corda é o movimento de Helmholtz, e embaixo está o espectro correspondente.</em></p>
+
 **Problema inverso.** `fit_pluck_position.m` compensa o fator 1/n, normaliza e procura numa grade fina o β que minimiza o erro quadrático em dB. O ganho fica livre e há saturação em −40 dB, porque o fundo de um notch real é limitado pelo ruído.
 
 <p align="center">
@@ -246,11 +276,7 @@ O fator $\sin(n\pi\beta)$ é um **filtro pente**: ele anula todo harmônico em q
 
 **Teoria.** O Karplus-Strong é um **sistema LTI com realimentação**: uma linha de atraso de L amostras (a "corda") com um filtro de perdas no laço.
 
-```
-x[n] ──(+)─────────────────────────────┬──▶ y[n]
-        ▲                              │
-        └── g · Hlp(z) · Hap(z) · z^-L ◀┘
-```
+<p align="center"><img src="docs/gif/karplus_strong.gif" width="80%"><br><em>Um período de ruído dá voltas no laço. A média de amostras vizinhas filtra os agudos a cada volta, e o que sobra é periódico: uma nota afinada.</em></p>
 
 $$H(z) = \frac{1}{1 - g\, H_{lp}(z)\, H_{ap}(z)\, z^{-L}}, \qquad H_{lp} = \frac{1 + z^{-1}}{2}, \qquad H_{ap} = \frac{C + z^{-1}}{1 + C z^{-1}}$$
 
@@ -275,6 +301,8 @@ Multiplicando por $(1 + Cz^{-1})$, H(z) vira uma razão de polinômios e a sínt
 **Pergunta:** por que distorção digital "ingênua" soa áspera? E de onde vêm os harmônicos pares?
 
 **Teoria.** Uma distorção sem memória $y = f(x)$ é **não linear**: aplicada a uma senoide, ela cria harmônicos que podem passar de $f_s/2$. Em tempo discreto, esses harmônicos **dobram** (aliasing) para frequências que *não* são múltiplas de f0, e isso é ouvido como aspereza. Solução clássica: **sobreamostrar** (subir a taxa por M), distorcer, filtrar e voltar.
+
+<p align="center"><img src="docs/gif/aliasing.gif" width="75%"><br><em>Com fs = 20 Hz, uma senoide de 13,7 Hz produz as mesmas amostras que uma de 6,3 Hz. Os harmônicos criados pela distorção sofrem o mesmo destino.</em></p>
 
 O experimento usa uma senoide de 2960 Hz e mede a **potência fora da série harmônica**. Por construção, essa potência é aliasing:
 
@@ -302,6 +330,8 @@ Cerca de 13 dB a cada dobra, ao custo de mais processamento.
 **Teoria.** Um sistema LTI é **completamente** descrito pela sua resposta ao impulso:
 
 $$y[n] = (x * h)[n] = \sum_{k=0}^{M-1} h[k]\, x[n-k]$$
+
+<p align="center"><img src="docs/gif/convolution.gif" width="75%"><br><em>Cada "palhetada" de x[k] dispara uma cópia de h[n]; a saída é a soma de todas elas.</em></p>
 
 É assim que simuladores de amplificador "capturam" caixas e salas: tocam um impulso (ou uma varredura) e gravam a saída. A convolução direta custa O(M) por amostra. Já a **overlap-add** com FFT (`fftfilt`) custa O(log M).
 
