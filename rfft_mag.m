@@ -1,6 +1,6 @@
 ## ============================================================
 ## Guitar / Acoustic Signals & Systems Lab (Octave)
-## Autor: você + ChatGPT
+## Autor: Rogério Cerqueira
 ## Requisitos: Octave 7+ e pkg 'signal'
 ## Como usar:
 ##  1) Defina os arquivos WAV nas variáveis abaixo.
